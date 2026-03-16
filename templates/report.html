@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GitHub Assessment Report</title>
+    <style>
+      :root {
+        --bg: #f6f2ea;
+        --ink: #1c1b1a;
+        --muted: #5e5a55;
+        --accent: #b55a3c;
+        --card: #ffffff;
+        --border: #e2d8cc;
+      }
+      body {
+        margin: 0;
+        padding: 32px;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "Georgia", "Times New Roman", serif;
+      }
+      h1, h2, h3 {
+        margin: 0 0 12px 0;
+      }
+      .container {
+        max-width: 960px;
+        margin: 0 auto;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 16px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+      }
+      .row {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+      .pill {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: #f2e6d9;
+        color: var(--accent);
+        font-size: 12px;
+        margin-right: 6px;
+      }
+      .score {
+        font-size: 42px;
+        font-weight: 700;
+        color: var(--accent);
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .repo {
+        border-top: 1px solid var(--border);
+        padding-top: 12px;
+        margin-top: 12px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 12px;
+      }
+      .bar {
+        height: 8px;
+        background: #f2e6d9;
+        border-radius: 999px;
+        overflow: hidden;
+      }
+      .bar span {
+        display: block;
+        height: 8px;
+        background: var(--accent);
+      }
+      @media (max-width: 600px) {
+        body {
+          padding: 16px;
+        }
+        .score {
+          font-size: 34px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="card">
+        <h1>GitHub Assessment Report</h1>
+        <p class="muted">
+          Candidate: <strong>{{ payload.username }}</strong> |
+          Generated: {{ payload.generated_at }}
+        </p>
+        <div class="row">
+          <div>
+            <div class="score">{{ payload.scores.overall }}</div>
+            <div class="muted">Overall score</div>
+          </div>
+          <div>
+            <p><strong>{{ payload.profile.name }}</strong></p>
+            <p class="muted">{{ payload.profile.bio }}</p>
+            <p class="muted">
+              Public repos: {{ payload.profile.public_repos }} |
+              Followers: {{ payload.profile.followers }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Specialization Fit</h2>
+        <div class="grid">
+          {% for name, score in payload.scores.specializations.items() %}
+            <div>
+              <strong>{{ name.replace("_", " ").title() }}</strong>
+              <div class="bar"><span style="width: {{ score }}%;"></span></div>
+              <div class="muted">{{ score }}/100</div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Score Breakdown</h2>
+        <div class="grid">
+          {% for name, score in payload.scores.breakdown.items() %}
+            {% if name != "overall" %}
+              <div>
+                <strong>{{ name.replace("_", " ").title() }}</strong>
+                <div class="bar"><span style="width: {{ score }}%;"></span></div>
+                <div class="muted">{{ score }}/100</div>
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Top Repositories Reviewed</h2>
+        {% for repo in payload.repos %}
+          <div class="repo">
+            <h3>{{ repo.name }}</h3>
+            <p class="muted">{{ repo.description }}</p>
+            <p class="muted">Stars: {{ repo.stars }} | Forks: {{ repo.forks }}</p>
+            <p>
+              {% for lang in repo.languages[:6] %}
+                <span class="pill">{{ lang }}</span>
+              {% endfor %}
+            </p>
+            <p class="muted">Signals: {{ repo.signals.evidence }}</p>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </body>
+</html>
