@@ -5,138 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>GitHub Screener</title>
     <style>
-      :root {
-        --bg: #f8f5ef;
-        --ink: #1d1b19;
-        --muted: #6b645d;
-        --accent: #c04f2f;
-        --card: #ffffff;
-        --border: #e6dccf;
-      }
-      * {
-        box-sizing: border-box;
-      }
-      body {
-        margin: 0;
-        font-family: "Georgia", "Times New Roman", serif;
-        background: radial-gradient(circle at top, #fdfbf7 0%, #f3efe7 45%, #efe7dc 100%);
-        color: var(--ink);
-        min-height: 100vh;
-      }
-      .wrap {
-        max-width: 980px;
-        margin: 0 auto;
-        padding: 40px 20px 80px;
-      }
-      header {
-        margin-bottom: 32px;
-      }
-      h1 {
-        margin: 0 0 10px;
-        font-size: 42px;
-      }
-      p {
-        margin: 0;
-        color: var(--muted);
-      }
-      .card {
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        padding: 20px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-      }
-      form {
-        display: flex;
-        gap: 12px;
-        flex-wrap: wrap;
-        align-items: center;
-      }
-      input[type="text"] {
-        flex: 1;
-        min-width: 220px;
-        padding: 12px 14px;
-        border-radius: 10px;
-        border: 1px solid var(--border);
-        font-size: 16px;
-      }
-      button {
-        background: var(--accent);
-        color: white;
-        border: none;
-        padding: 12px 20px;
-        border-radius: 10px;
-        font-size: 16px;
-        cursor: pointer;
-      }
-      button:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-      }
-      .result {
-        margin-top: 20px;
-        white-space: pre-wrap;
-        background: #fffaf3;
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 16px;
-        font-size: 14px;
-      }
-      .muted {
-        color: var(--muted);
-        font-size: 13px;
-      }
-      @media (max-width: 600px) {
-        h1 {
-          font-size: 32px;
-        }
-      }
+      body { font-family: Georgia, serif; margin: 0; padding: 40px; background: #f8f5ef; color: #1d1b19; }
+      .card { background: white; border: 1px solid #e6dccf; border-radius: 12px; padding: 20px; max-width: 720px; }
+      input, button { font-size: 16px; padding: 10px; border-radius: 8px; border: 1px solid #e6dccf; }
+      button { background: #c04f2f; color: white; border: none; cursor: pointer; }
+      pre { background: #fffaf3; padding: 12px; border-radius: 8px; white-space: pre-wrap; }
     </style>
   </head>
   <body>
-    <div class="wrap">
-      <header>
-        <h1>GitHub Screener</h1>
-        <p>Paste a GitHub username to generate an assessment report.</p>
-      </header>
-
-      <div class="card">
-        <form id="assess-form">
-          <input id="username" type="text" placeholder="e.g. octocat" />
-          <button id="submit" type="submit">Assess</button>
-        </form>
-        <p class="muted">Tip: Results use public data only.</p>
-        <div id="output" class="result" style="display: none;"></div>
-      </div>
+    <h1>GitHub Screener</h1>
+    <div class="card">
+      <form id="assess-form">
+        <input id="username" placeholder="e.g. octocat" />
+        <button type="submit">Assess</button>
+      </form>
+      <pre id="output" style="display:none;"></pre>
     </div>
-
     <script>
       const form = document.getElementById("assess-form");
       const output = document.getElementById("output");
-      const button = document.getElementById("submit");
-
-      form.addEventListener("submit", async (event) => {
-        event.preventDefault();
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
         const username = document.getElementById("username").value.trim();
         if (!username) return;
-
-        button.disabled = true;
         output.style.display = "block";
         output.textContent = "Assessing...";
-
-        try {
-          const response = await fetch(`/api/assess?username=${encodeURIComponent(username)}`);
-          if (!response.ok) {
-            const err = await response.json();
-            throw new Error(err.detail || "Request failed");
-          }
-          const data = await response.json();
-          output.textContent = JSON.stringify(data, null, 2);
-        } catch (err) {
-          output.textContent = `Error: ${err.message}`;
-        } finally {
-          button.disabled = false;
-        }
+        const res = await fetch(`/api/assess?username=${encodeURIComponent(username)}`);
+        const data = await res.json();
+        output.textContent = JSON.stringify(data, null, 2);
       });
     </script>
   </body>
