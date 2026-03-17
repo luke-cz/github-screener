@@ -1,10 +1,8 @@
 from fastapi import FastAPI, HTTPException, Query
-
 from app.assess import assess_user
 from app.report import build_report_payload
 
 app = FastAPI(title="GitHub Assessor", version="0.1.0")
-
 
 def _normalize_username(value: str) -> str:
     trimmed = value.strip()
@@ -20,7 +18,6 @@ def _normalize_username(value: str) -> str:
         return path.split("/", 1)[0]
     return trimmed.lstrip("@")
 
-
 @app.get("/")
 def assess(username: str = Query(..., min_length=1, max_length=80)) -> dict:
     try:
@@ -29,11 +26,10 @@ def assess(username: str = Query(..., min_length=1, max_length=80)) -> dict:
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
-    payload = build_report_payload(
+    return build_report_payload(
         username=normalized,
         user_info=result["user"],
         repo_summaries=result["repos"],
         specialization_scores=result["specialization_scores"],
         score_breakdown=result["score_breakdown"],
     )
-    return payload
