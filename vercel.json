@@ -1,7 +1,0 @@
-{
-  "routes": [
-    { "handle": "filesystem" },
-    { "src": "/api/(.*)", "dest": "/api/assess.py" },
-    { "src": "/(.*)", "dest": "/index.html" }
-  ]
-}
