@@ -1,0 +1,206 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GitHub Screener</title>
+    <style>
+      :root {
+        --bg: #f8f5ef;
+        --ink: #1d1b19;
+        --muted: #6b645d;
+        --accent: #c04f2f;
+        --accent-dark: #9f3e24;
+        --card: #ffffff;
+        --border: #e6dccf;
+        --shadow: 0 16px 36px rgba(0, 0, 0, 0.08);
+      }
+      * { box-sizing: border-box; }
+      body {
+        font-family: "Georgia", "Times New Roman", serif;
+        margin: 0;
+        padding: 0;
+        background: radial-gradient(circle at top, #fffaf2 0%, #f4eee3 40%, #efe7dc 100%);
+        color: var(--ink);
+        min-height: 100vh;
+      }
+      .wrap {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 48px 20px 80px;
+      }
+      header { margin-bottom: 28px; }
+      h1 { margin: 0 0 8px; font-size: 42px; }
+      p { margin: 0; color: var(--muted); }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 22px;
+        box-shadow: var(--shadow);
+      }
+      form {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+      input, button {
+        font-size: 16px;
+        padding: 12px 14px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+      }
+      input { flex: 1; min-width: 220px; }
+      button {
+        background: var(--accent);
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: background 0.2s ease;
+      }
+      button:hover { background: var(--accent-dark); }
+      button:disabled { opacity: 0.6; cursor: not-allowed; }
+      .status {
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 6px;
+      }
+      .progress {
+        height: 10px;
+        background: #efe4d6;
+        border-radius: 999px;
+        overflow: hidden;
+        margin-top: 10px;
+        display: none;
+      }
+      .progress .bar {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #c04f2f, #e07a55);
+        animation: progressLoop 2.2s ease-in-out infinite;
+      }
+      .result {
+        margin-top: 16px;
+        background: #fffaf3;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 14px;
+        white-space: pre-wrap;
+        font-size: 14px;
+        display: none;
+      }
+      .tips {
+        margin-top: 16px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 12px;
+      }
+      .tip {
+        border: 1px dashed var(--border);
+        padding: 12px;
+        border-radius: 12px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      @keyframes progressLoop {
+        0% { width: 10%; transform: translateX(0); }
+        50% { width: 70%; transform: translateX(10%); }
+        100% { width: 10%; transform: translateX(90%); }
+      }
+      @media (max-width: 640px) {
+        h1 { font-size: 32px; }
+        .wrap { padding: 32px 16px 60px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <h1>GitHub Screener</h1>
+        <p>Assess public GitHub profiles for engineering signal and specialization fit.</p>
+      </header>
+
+      <div class="card">
+        <form id="assess-form">
+          <input id="username" placeholder="e.g. octocat" />
+          <button id="submit" type="submit">Assess</button>
+        </form>
+        <div id="status" class="status">Uses public data only.</div>
+        <div id="progress" class="progress"><div class="bar"></div></div>
+        <pre id="output" class="result"></pre>
+      </div>
+
+      <div class="tips">
+        <div class="tip">Tip: Provide a GitHub token in Vercel to avoid rate limits.</div>
+        <div class="tip">The first run can take longer for accounts with many repos.</div>
+        <div class="tip">Results are heuristic and intended to support review.</div>
+      </div>
+    </div>
+
+    <script>
+      const form = document.getElementById("assess-form");
+      const output = document.getElementById("output");
+      const progress = document.getElementById("progress");
+      const status = document.getElementById("status");
+      const button = document.getElementById("submit");
+
+      function normalizeUsername(value) {
+        const trimmed = value.trim();
+        if (!trimmed) return "";
+        const lowered = trimmed.toLowerCase();
+        if (lowered.startsWith("http://") || lowered.startsWith("https://")) {
+          try {
+            const url = new URL(trimmed);
+            const parts = url.pathname.split("/").filter(Boolean);
+            return parts[0] || "";
+          } catch {
+            return trimmed;
+          }
+        }
+        if (trimmed.includes("github.com/")) {
+          const idx = trimmed.toLowerCase().indexOf("github.com/");
+          const rest = trimmed.slice(idx + "github.com/".length);
+          return rest.split("/")[0] || "";
+        }
+        return trimmed.replace(/^@/, "");
+      }
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const raw = document.getElementById("username").value;
+        const username = normalizeUsername(raw);
+        if (!username) return;
+
+        button.disabled = true;
+        progress.style.display = "block";
+        output.style.display = "block";
+        output.textContent = "";
+        status.textContent = "Assessing profile and repositories...";
+
+        try {
+          const res = await fetch(`/api/assess?username=${encodeURIComponent(username)}`);
+          const text = await res.text();
+          let data;
+          try {
+            data = JSON.parse(text);
+          } catch {
+            throw new Error("Unexpected response from server.");
+          }
+          if (!res.ok) {
+            throw new Error(data.detail || "Request failed");
+          }
+          status.textContent = "Assessment complete.";
+          output.textContent = JSON.stringify(data, null, 2);
+        } catch (err) {
+          status.textContent = "Assessment failed.";
+          output.textContent = `Error: ${err.message}`;
+        } finally {
+          progress.style.display = "none";
+          button.disabled = false;
+        }
+      });
+    </script>
+  </body>
+</html>
