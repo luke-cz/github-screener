@@ -19,6 +19,8 @@ def _normalize_username(value: str) -> str:
     return trimmed.lstrip("@")
 
 @app.get("/")
+@app.get("/assess")
+@app.get("/api/assess")
 def assess(username: str = Query(..., min_length=1, max_length=80)) -> dict:
     try:
         normalized = _normalize_username(username)
