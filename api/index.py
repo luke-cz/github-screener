@@ -1,5 +1,19 @@
 from fastapi import FastAPI, HTTPException, Query
 
+def _normalize_username(value: str) -> str:
+    trimmed = value.strip()
+    lowered = trimmed.lower()
+    if lowered.startswith("http://") or lowered.startswith("https://"):
+        try:
+            path = trimmed.split("github.com/", 1)[1]
+            return path.split("/", 1)[0]
+        except Exception:
+            return trimmed
+    if "github.com/" in lowered:
+        path = trimmed.split("github.com/", 1)[1]
+        return path.split("/", 1)[0]
+    return trimmed.lstrip("@")
+
 from app.assess import assess_user
 from app.report import build_report_payload
 
@@ -9,7 +23,8 @@ app = FastAPI(title="GitHub Assessor", version="0.1.0")
 @app.get("/assess")
 def assess(username: str = Query(..., min_length=1, max_length=80)) -> dict:
     try:
-        result = assess_user(username)
+        normalized = _normalize_username(username)
+        result = assess_user(normalized)
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 

@@ -146,9 +146,31 @@
       const status = document.getElementById("status");
       const button = document.getElementById("submit");
 
+      function normalizeUsername(value) {
+        const trimmed = value.trim();
+        if (!trimmed) return "";
+        const lowered = trimmed.toLowerCase();
+        if (lowered.startsWith("http://") || lowered.startsWith("https://")) {
+          try {
+            const url = new URL(trimmed);
+            const parts = url.pathname.split("/").filter(Boolean);
+            return parts[0] || "";
+          } catch {
+            return trimmed;
+          }
+        }
+        if (trimmed.includes("github.com/")) {
+          const idx = trimmed.toLowerCase().indexOf("github.com/");
+          const rest = trimmed.slice(idx + "github.com/".length);
+          return rest.split("/")[0] || "";
+        }
+        return trimmed.replace(/^@/, "");
+      }
+
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
-        const username = document.getElementById("username").value.trim();
+        const raw = document.getElementById("username").value;
+        const username = normalizeUsername(raw);
         if (!username) return;
 
         button.disabled = true;
@@ -159,7 +181,13 @@
 
         try {
           const res = await fetch(`/api/assess?username=${encodeURIComponent(username)}`);
-          const data = await res.json();
+          const text = await res.text();
+          let data;
+          try {
+            data = JSON.parse(text);
+          } catch {
+            throw new Error("Unexpected response from server.");
+          }
           if (!res.ok) {
             throw new Error(data.detail || "Request failed");
           }
