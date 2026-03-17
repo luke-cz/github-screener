@@ -1,26 +1,280 @@
 ﻿<!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>GitHub Screener</title>
+    <style>
+      :root {
+        --bg: #f6efe6;
+        --ink: #1f1b17;
+        --muted: #6e655d;
+        --accent: #c04f2f;
+        --accent-dark: #9f3e24;
+        --card: #ffffff;
+        --border: #e7dccf;
+        --shadow: 0 18px 40px rgba(0, 0, 0, 0.08);
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "Georgia", "Times New Roman", serif;
+        background: radial-gradient(circle at top, #fff9f1 0%, #f2eadf 45%, #efe5d7 100%);
+        color: var(--ink);
+        min-height: 100vh;
+      }
+      .wrap {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 48px 20px 80px;
+      }
+      header {
+        display: grid;
+        gap: 8px;
+        margin-bottom: 28px;
+      }
+      h1 {
+        margin: 0;
+        font-size: 44px;
+      }
+      .lead {
+        margin: 0;
+        color: var(--muted);
+        font-size: 16px;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 22px;
+        box-shadow: var(--shadow);
+      }
+      form {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      input, button {
+        font-size: 16px;
+        padding: 12px 14px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+      }
+      input { flex: 1; min-width: 240px; }
+      button {
+        background: var(--accent);
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: background 0.2s ease;
+      }
+      button:hover { background: var(--accent-dark); }
+      button:disabled { opacity: 0.6; cursor: not-allowed; }
+      .status {
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .progress {
+        margin-top: 10px;
+        height: 10px;
+        background: #efe2d2;
+        border-radius: 999px;
+        overflow: hidden;
+        display: none;
+      }
+      .progress .bar {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #c04f2f, #e07a55);
+        animation: progressLoop 2.2s ease-in-out infinite;
+      }
+      @keyframes progressLoop {
+        0% { width: 12%; transform: translateX(0); }
+        50% { width: 70%; transform: translateX(10%); }
+        100% { width: 12%; transform: translateX(90%); }
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 16px;
+      }
+      .section-title {
+        margin: 26px 0 12px;
+        font-size: 20px;
+      }
+      .pill {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: #f1e3d3;
+        color: var(--accent);
+        font-size: 12px;
+        margin-right: 6px;
+      }
+      .bar {
+        height: 8px;
+        background: #f1e3d3;
+        border-radius: 999px;
+        overflow: hidden;
+        margin-top: 6px;
+      }
+      .bar span {
+        display: block;
+        height: 100%;
+        background: var(--accent);
+      }
+      .muted { color: var(--muted); }
+      .result {
+        margin-top: 18px;
+        display: none;
+      }
+      .error {
+        margin-top: 12px;
+        color: #8b2e1a;
+        background: #fff3ef;
+        border: 1px solid #f1d2c7;
+        padding: 10px 12px;
+        border-radius: 10px;
+        display: none;
+      }
+      details {
+        margin-top: 12px;
+      }
+      pre {
+        background: #fff8f1;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px;
+        white-space: pre-wrap;
+        font-size: 13px;
+      }
+      @media (max-width: 640px) {
+        h1 { font-size: 32px; }
+        .wrap { padding: 32px 16px 60px; }
+      }
+    </style>
   </head>
   <body>
-    <h1>GitHub Screener</h1>
-    <form id="form">
-      <input id="username" placeholder="e.g. octocat" />
-      <button type="submit">Assess</button>
-    </form>
-    <pre id="out"></pre>
+    <div class="wrap">
+      <header>
+        <h1>GitHub Screener</h1>
+        <p class="lead">Assess public GitHub profiles for engineering signal and specialization fit.</p>
+      </header>
+
+      <div class="card">
+        <form id="form">
+          <input id="username" placeholder="e.g. octocat or https://github.com/octocat" />
+          <button id="submit" type="submit">Assess</button>
+        </form>
+        <div id="status" class="status">Uses public data only.</div>
+        <div id="progress" class="progress"><div class="bar"></div></div>
+        <div id="error" class="error"></div>
+      </div>
+
+      <div id="result" class="result">
+        <h2 class="section-title">Candidate Summary</h2>
+        <div id="summary-card" class="card"></div>
+
+        <h2 class="section-title">Overall Score</h2>
+        <div id="overall-card" class="card"></div>
+
+        <h2 class="section-title">Score Breakdown</h2>
+        <div id="scores-grid" class="grid"></div>
+
+        <h2 class="section-title">Specialization Fit</h2>
+        <div id="specs-grid" class="grid"></div>
+      </div>
+    </div>
 
     <script>
       const form = document.getElementById("form");
-      const out = document.getElementById("out");
+      const statusEl = document.getElementById("status");
+      const progressEl = document.getElementById("progress");
+      const errorEl = document.getElementById("error");
+      const resultEl = document.getElementById("result");
+      const summaryCard = document.getElementById("summary-card");
+      const overallCard = document.getElementById("overall-card");
+      const scoresGrid = document.getElementById("scores-grid");
+      const specsGrid = document.getElementById("specs-grid");
+      const submitButton = document.getElementById("submit");
+
+      function normalizeUsername(value) {
+        const trimmed = value.trim();
+        if (!trimmed) return "";
+        const lowered = trimmed.toLowerCase();
+        if (lowered.startsWith("http://") || lowered.startsWith("https://")) {
+          try {
+            const url = new URL(trimmed);
+            const parts = url.pathname.split("/").filter(Boolean);
+            return parts[0] || "";
+          } catch { return trimmed; }
+        }
+        if (trimmed.includes("github.com/")) {
+          const idx = trimmed.toLowerCase().indexOf("github.com/");
+          const rest = trimmed.slice(idx + "github.com/".length);
+          return rest.split("/")[0] || "";
+        }
+        return trimmed.replace(/^@/, "");
+      }
+
+      function renderBars(target, data) {
+        target.innerHTML = "";
+        Object.entries(data).forEach(([label, score]) => {
+          const safe = Math.max(0, Math.min(100, Number(score) || 0));
+          const item = document.createElement("div");
+          item.className = "card";
+          item.innerHTML = `
+            <div class="muted">${label.replace(/_/g, " ")}</div>
+            <div class="bar"><span style="width:${safe}%;"></span></div>
+            <div class="muted">${safe}/100</div>
+          `;
+          target.appendChild(item);
+        });
+      }
+
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
+        errorEl.style.display = "none";
+        resultEl.style.display = "none";
+
         const raw = document.getElementById("username").value;
-        const res = await fetch(`/api/assess?username=${encodeURIComponent(raw)}`);
-        const text = await res.text();
-        out.textContent = text;
+        const username = normalizeUsername(raw);
+        if (!username) return;
+
+        submitButton.disabled = true;
+        progressEl.style.display = "block";
+        statusEl.textContent = "Assessing profile and repositories...";
+
+        try {
+          const res = await fetch(`/api/assess?username=${encodeURIComponent(username)}`);
+          const text = await res.text();
+          const data = JSON.parse(text);
+          if (!res.ok) throw new Error(data.detail || "Request failed");
+
+          const profile = data.profile || {};
+          summaryCard.innerHTML = `
+            <div><strong>${data.username || profile.login || "Unknown"}</strong></div>
+            <div class="muted">${profile.name || ""}</div>
+            <div class="muted">${profile.bio || ""}</div>
+            <div class="muted">Public repos: ${profile.public_repos ?? "—"} | Followers: ${profile.followers ?? "—"}</div>
+          `;
+
+          overallCard.innerHTML = `<div style="font-size:34px;">${data.scores?.overall ?? "—"}/100</div>`;
+          renderBars(scoresGrid, data.scores?.breakdown || {});
+          renderBars(specsGrid, data.scores?.specializations || {});
+
+          resultEl.style.display = "block";
+          statusEl.textContent = "Assessment complete.";
+        } catch (err) {
+          errorEl.textContent = `Error: ${err.message}`;
+          errorEl.style.display = "block";
+          statusEl.textContent = "Assessment failed.";
+        } finally {
+          progressEl.style.display = "none";
+          submitButton.disabled = false;
+        }
       });
     </script>
   </body>
