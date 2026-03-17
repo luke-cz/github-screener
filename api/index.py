@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from fastapi import FastAPI, HTTPException, Query
 
 from app.assess import assess_user
@@ -9,7 +7,6 @@ app = FastAPI(title="GitHub Assessor", version="0.1.0")
 
 
 @app.get("/assess")
-@app.get("/api/assess")
 def assess(username: str = Query(..., min_length=1, max_length=80)) -> dict:
     try:
         result = assess_user(username)
