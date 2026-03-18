@@ -5,196 +5,231 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>GitHub Screener</title>
     <style>
-      @import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Space+Grotesk:wght@400;600;700&display=swap");
       :root {
-        --bg: #f3efe7;
-        --ink: #1a1917;
-        --muted: #6c645c;
-        --accent: #0f5d5a;
-        --accent-2: #e07a5f;
-        --card: #ffffff;
-        --border: #e5dbcf;
-        --shadow: 0 24px 60px rgba(18, 18, 18, 0.12);
+        --bg: #0d1117;
+        --panel: rgba(23, 28, 33, 0.92);
+        --ink: #e6edf3;
+        --muted: rgba(230, 237, 243, 0.68);
+        --accent: #58a6ff;
+        --accent-2: #bb80ff;
+        --border: rgba(230, 237, 243, 0.1);
+        --shadow: 0 14px 45px rgba(0, 0, 0, 0.35);
       }
+
       * { box-sizing: border-box; }
       body {
         margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: radial-gradient(circle at 20% -10%, rgba(88, 166, 255, 0.22), transparent 55%),
+                    radial-gradient(circle at 80% 10%, rgba(187, 128, 255, 0.18), transparent 60%),
+                    linear-gradient(180deg, #05060a 0%, #0b0f16 45%, #0d1117 100%);
         color: var(--ink);
-        background:
-          radial-gradient(circle at 20% 10%, #fff8ef 0%, #f7f1e6 35%, transparent 60%),
-          radial-gradient(circle at 80% 0%, #f2ebe0 0%, transparent 45%),
-          linear-gradient(180deg, #f7f1e6 0%, #efe7dc 60%, #f3efe7 100%);
-        font-family: "Space Grotesk", "Segoe UI", sans-serif;
         min-height: 100vh;
+        padding: 0 18px;
       }
+
       .wrap {
-        max-width: 1120px;
+        max-width: 1050px;
         margin: 0 auto;
-        padding: 52px 20px 100px;
+        padding: 52px 0 90px;
       }
+
       header {
         display: grid;
         gap: 12px;
-        margin-bottom: 26px;
+        margin-bottom: 30px;
       }
+
       h1 {
         margin: 0;
-        font-size: clamp(34px, 4vw, 54px);
-        font-family: "Playfair Display", serif;
+        font-size: clamp(36px, 5vw, 56px);
         letter-spacing: -0.02em;
       }
+
       .lead {
         margin: 0;
         color: var(--muted);
         max-width: 720px;
+        line-height: 1.5;
       }
+
       .hero {
         display: grid;
+        grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
         gap: 20px;
-        grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
-        align-items: stretch;
+        align-items: start;
       }
+
       .card {
-        background: var(--card);
+        background: var(--panel);
         border: 1px solid var(--border);
-        border-radius: 20px;
+        border-radius: 18px;
         padding: 22px;
         box-shadow: var(--shadow);
       }
+
       .form-card {
         position: relative;
         overflow: hidden;
       }
+
       .form-card::after {
         content: "";
         position: absolute;
         right: -80px;
-        top: -80px;
+        top: -40px;
         width: 180px;
         height: 180px;
-        background: radial-gradient(circle, rgba(224, 122, 95, 0.25), transparent 70%);
+        background: radial-gradient(circle, rgba(88, 166, 255, 0.25), transparent 70%);
         pointer-events: none;
       }
+
       form {
         display: flex;
         gap: 12px;
         flex-wrap: wrap;
         align-items: center;
       }
-      input, button {
-        font-size: 16px;
+
+      input, button, select {
+        font-size: 15px;
         padding: 12px 14px;
         border-radius: 12px;
         border: 1px solid var(--border);
-        font-family: "Space Grotesk", sans-serif;
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--ink);
       }
-      input { flex: 1; min-width: 240px; background: #fffaf5; }
+
+      input:focus, select:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.22);
+      }
+
+      input {
+        flex: 1;
+        min-width: 240px;
+      }
+
       button {
-        background: var(--accent);
-        color: #fff;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        color: #0b1220;
         border: none;
         cursor: pointer;
-        transition: transform 0.15s ease, background 0.2s ease;
+        transition: transform 0.2s ease, filter 0.2s ease;
+        font-weight: 600;
       }
-      button:hover { background: #0a4b48; transform: translateY(-1px); }
-      button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+      button:hover {
+        transform: translateY(-1px);
+        filter: brightness(1.05);
+      }
+
+      button:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+
       .status {
         margin-top: 12px;
         color: var(--muted);
         font-size: 13px;
       }
+
       .progress {
-        margin-top: 10px;
+        margin-top: 12px;
         height: 10px;
-        background: #ece2d6;
+        background: rgba(255, 255, 255, 0.06);
         border-radius: 999px;
         overflow: hidden;
         display: none;
       }
+
       .progress .bar {
         height: 100%;
         width: 0%;
-        background: linear-gradient(90deg, #0f5d5a, #e07a5f);
+        background: linear-gradient(90deg, rgba(88, 166, 255, 0.9), rgba(187, 128, 255, 0.9));
         animation: progressLoop 2.2s ease-in-out infinite;
       }
+
       @keyframes progressLoop {
         0% { width: 12%; transform: translateX(0); }
         50% { width: 70%; transform: translateX(10%); }
         100% { width: 12%; transform: translateX(90%); }
       }
-      .insights {
-        display: grid;
-        gap: 12px;
-      }
-      .chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 6px 10px;
-        border-radius: 999px;
-        background: #f1e6da;
-        color: var(--accent);
-        font-size: 12px;
-      }
-      .grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 16px;
-      }
-      .section-title {
-        margin: 28px 0 12px;
-        font-size: 20px;
-        font-weight: 700;
-      }
-      .bar {
-        height: 8px;
-        background: #efe3d6;
-        border-radius: 999px;
-        overflow: hidden;
-        margin-top: 6px;
-      }
-      .bar span {
-        display: block;
-        height: 100%;
-        background: var(--accent-2);
-      }
-      .muted { color: var(--muted); }
-      .result { margin-top: 22px; display: none; }
-      .error {
-        margin-top: 12px;
-        color: #7a2f22;
-        background: #fff0eb;
-        border: 1px solid #f2d2c9;
-        padding: 10px 12px;
-        border-radius: 10px;
+
+      .result {
+        margin-top: 26px;
         display: none;
       }
+
+      .result h2 {
+        margin: 0 0 12px;
+        font-size: 20px;
+      }
+
+      .grid {
+        display: grid;
+        gap: 14px;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      }
+
+      .card.small {
+        padding: 16px;
+        border-radius: 16px;
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
       .score-ring {
-        width: 130px;
-        height: 130px;
+        width: 128px;
+        height: 128px;
         border-radius: 50%;
-        background: conic-gradient(var(--accent) 0deg, var(--accent) 0deg, #efe3d6 0deg);
+        background: conic-gradient(var(--accent) 0deg, var(--accent) 0deg, rgba(255, 255, 255, 0.08) 0deg);
         display: grid;
         place-items: center;
         margin-bottom: 12px;
       }
+
       .score-ring span {
-        display: inline-block;
-        width: 96px;
-        height: 96px;
+        width: 92px;
+        height: 92px;
         border-radius: 50%;
-        background: #fff;
+        background: rgba(255, 255, 255, 0.07);
         display: grid;
         place-items: center;
-        font-size: 28px;
+        font-size: 26px;
         font-weight: 700;
       }
-      @media (max-width: 900px) {
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: rgba(88, 166, 255, 0.12);
+        color: var(--accent);
+        font-size: 12px;
+      }
+
+      .error {
+        margin-top: 14px;
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: rgba(187, 64, 64, 0.18);
+        border: 1px solid rgba(187, 64, 64, 0.3);
+        color: #ffd5d5;
+      }
+
+      @media (max-width: 880px) {
         .hero { grid-template-columns: 1fr; }
       }
-      @media (max-width: 640px) {
-        .wrap { padding: 32px 16px 70px; }
-        h1 { font-size: 32px; }
+
+      @media (max-width: 600px) {
+        h1 { font-size: 34px; }
       }
     </style>
   </head>
@@ -202,42 +237,42 @@
     <div class="wrap">
       <header>
         <h1>GitHub Screener</h1>
-        <p class="lead">Assess public GitHub profiles for engineering signal and specialization fit.</p>
+        <p class="lead">Paste a GitHub profile URL or username, then assess the candidate with an AI-powered summary and score.</p>
       </header>
 
       <section class="hero">
         <div class="card form-card">
           <form id="form">
-            <input id="username" placeholder="e.g. octocat or https://github.com/octocat" />
+            <input id="username" type="text" placeholder="e.g. octocat or https://github.com/octocat" autocomplete="off" />
+            <input id="domain" type="text" placeholder="Domain (e.g. frontend, infra)" autocomplete="off" />
             <button id="submit" type="submit">Assess</button>
           </form>
-          <div id="status" class="status">Uses public data only.</div>
+          <div id="status" class="status">Uses public GitHub data and a hosted AI model.</div>
           <div id="progress" class="progress"><div class="bar"></div></div>
-          <div id="error" class="error"></div>
+          <div id="error" class="error" style="display:none;"></div>
         </div>
-        <div class="card insights">
-          <div class="chip">Live from GitHub API</div>
-          <div class="chip">Specialization focus</div>
-          <div class="chip">Signals: tests, docs, CI</div>
-          <p class="muted">Paste any GitHub profile URL or username. We summarize strength areas and highlight how the candidate aligns with your role requirements.</p>
+
+        <div class="card">
+          <div class="badge">AI-powered</div>
+          <p class="muted" style="margin-top: 12px;">This endpoint analyzes public profile data, repos, and recent activity to surface strengths, risks, and fit.</p>
+          <p class="muted" style="margin-top: 10px;">Turn around reports quickly without exposing private data. Works best with active, public GitHub accounts.</p>
         </div>
       </section>
 
       <div id="result" class="result">
-        <h2 class="section-title">Candidate Summary</h2>
-        <div id="summary-card" class="card"></div>
+        <h2>Assessment</h2>
 
-        <h2 class="section-title">Overall Score</h2>
-        <div id="overall-card" class="card"></div>
+        <div class="grid">
+          <div class="card small" id="profile-card"></div>
+          <div class="card small" id="score-card"></div>
+        </div>
 
-        <h2 class="section-title">Score Breakdown</h2>
-        <div id="scores-grid" class="grid"></div>
+        <div class="grid" style="margin-top: 14px;">
+          <div class="card small" id="dimensions-card"></div>
+          <div class="card small" id="flags-card"></div>
+        </div>
 
-        <h2 class="section-title">Specialization Fit</h2>
-        <div id="specs-grid" class="grid"></div>
-
-        <h2 class="section-title">Highlights</h2>
-        <div id="highlights-card" class="card"></div>
+        <div class="card" id="summary-card" style="margin-top: 16px;"></div>
       </div>
     </div>
 
@@ -247,11 +282,11 @@
       const progressEl = document.getElementById("progress");
       const errorEl = document.getElementById("error");
       const resultEl = document.getElementById("result");
+      const profileCard = document.getElementById("profile-card");
+      const scoreCard = document.getElementById("score-card");
+      const dimensionsCard = document.getElementById("dimensions-card");
+      const flagsCard = document.getElementById("flags-card");
       const summaryCard = document.getElementById("summary-card");
-      const overallCard = document.getElementById("overall-card");
-      const scoresGrid = document.getElementById("scores-grid");
-      const specsGrid = document.getElementById("specs-grid");
-      const highlightsCard = document.getElementById("highlights-card");
       const submitButton = document.getElementById("submit");
 
       function normalizeUsername(value) {
@@ -263,7 +298,9 @@
             const url = new URL(trimmed);
             const parts = url.pathname.split("/").filter(Boolean);
             return parts[0] || "";
-          } catch { return trimmed; }
+          } catch {
+            return trimmed;
+          }
         }
         if (trimmed.includes("github.com/")) {
           const idx = trimmed.toLowerCase().indexOf("github.com/");
@@ -273,25 +310,74 @@
         return trimmed.replace(/^@/, "");
       }
 
-      function renderBars(target, data) {
-        target.innerHTML = "";
-        Object.entries(data).forEach(([label, score]) => {
-          const safe = Math.max(0, Math.min(100, Number(score) || 0));
-          const item = document.createElement("div");
-          item.className = "card";
-          item.innerHTML = `
-            <div class="muted">${label.replace(/_/g, " ")}</div>
-            <div class="bar"><span style="width:${safe}%;"></span></div>
-            <div class="muted">${safe}/100</div>
-          `;
-          target.appendChild(item);
-        });
+      function renderProfile(profile) {
+        profileCard.innerHTML = `
+          <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+            <img src="${profile.avatar_url || ""}" width="64" height="64" style="border-radius:18px;" alt="avatar" />
+            <div>
+              <div style="font-weight:700; font-size:18px;">${profile.login || "unknown"}</div>
+              <div class="muted">${profile.name || ""}</div>
+              <div class="muted" style="margin-top:6px;">${profile.bio || ""}</div>
+            </div>
+          </div>
+        `;
       }
 
-      function topKeys(data, count) {
-        return Object.entries(data || {})
-          .sort((a, b) => (b[1] || 0) - (a[1] || 0))
-          .slice(0, count);
+      function renderScore(analysis) {
+        const score = Number(analysis.overallScore ?? 0);
+        const degrees = Math.min(100, Math.max(0, score)) * 3.6;
+        scoreCard.innerHTML = `
+          <div style="display:flex; gap:14px; align-items:center; flex-wrap:wrap;">
+            <div class="score-ring" style="background: conic-gradient(var(--accent) ${degrees}deg, rgba(255,255,255,0.08) ${degrees}deg);">
+              <span>${score}</span>
+            </div>
+            <div>
+              <div class="muted">Verdict</div>
+              <div style="font-size:18px; font-weight:700;">${analysis.verdict || "—"}</div>
+              <div class="muted" style="margin-top:6px;">${analysis.headline || ""}</div>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderDimensions(analysis) {
+        const items = (analysis.dimensions || []).slice(0, 4);
+        if (!items.length) {
+          dimensionsCard.innerHTML = `<div class="muted">No dimension data available.</div>`;
+          return;
+        }
+        dimensionsCard.innerHTML = items
+          .map((d) => `
+            <div style="margin-bottom: 10px;">
+              <div class="muted">${d.name}</div>
+              <div style="font-weight:700; margin-top:4px;">${d.score ?? 0}/100</div>
+              <div class="muted" style="font-size:13px; margin-top:4px;">${d.note || ""}</div>
+            </div>
+          `)
+          .join("");
+      }
+
+      function renderFlags(analysis) {
+        const flags = (analysis.flags || []).slice(0, 5);
+        if (!flags.length) {
+          flagsCard.innerHTML = `<div class="muted">No flags.</div>`;
+          return;
+        }
+        flagsCard.innerHTML = flags
+          .map((f) => `
+            <div style="margin-bottom:10px;">
+              <div style="font-weight:700;">${f.type || "note"}</div>
+              <div class="muted" style="margin-top:4px;">${f.text || ""}</div>
+            </div>
+          `)
+          .join("");
+      }
+
+      function renderSummary(analysis) {
+        summaryCard.innerHTML = `
+          <div style="font-weight:700; margin-bottom:12px;">Summary</div>
+          <div style="line-height:1.6; white-space: pre-wrap;">${analysis.summary || "No summary available."}</div>
+        `;
       }
 
       form.addEventListener("submit", async (e) => {
@@ -299,66 +385,30 @@
         errorEl.style.display = "none";
         resultEl.style.display = "none";
 
-        const raw = document.getElementById("username").value;
-        const username = normalizeUsername(raw);
+        const rawUsername = document.getElementById("username").value;
+        const rawDomain = document.getElementById("domain").value;
+        const username = normalizeUsername(rawUsername);
+        const domain = rawDomain.trim();
         if (!username) return;
 
         submitButton.disabled = true;
         progressEl.style.display = "block";
-        statusEl.textContent = "Assessing profile and repositories...";
+        statusEl.textContent = "Fetching profile and generating analysis...";
 
         try {
-          const res = await fetch(`/api/assess?username=${encodeURIComponent(username)}`);
-          const text = await res.text();
-          const data = JSON.parse(text);
+          const res = await fetch("/api/assess_ai", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, domain }),
+          });
+          const data = await res.json();
           if (!res.ok) throw new Error(data.detail || "Request failed");
 
-          const profile = data.profile || {};
-          summaryCard.innerHTML = `
-            <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:center;">
-              <div>
-                <div class="muted">Username</div>
-                <div style="font-size:26px; font-weight:700;">${data.username || profile.login || "Unknown"}</div>
-                <div class="muted">${profile.name || ""}</div>
-                <div class="muted">${profile.bio || ""}</div>
-              </div>
-              <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));">
-                <div class="card"><div class="muted">Public repos</div><div style="font-size:22px;">${profile.public_repos ?? "—"}</div></div>
-                <div class="card"><div class="muted">Followers</div><div style="font-size:22px;">${profile.followers ?? "—"}</div></div>
-                <div class="card"><div class="muted">Following</div><div style="font-size:22px;">${profile.following ?? "—"}</div></div>
-              </div>
-            </div>
-          `;
-
-          const overallScore = Number(data.scores?.overall ?? 0);
-          const degrees = Math.min(100, Math.max(0, overallScore)) * 3.6;
-          overallCard.innerHTML = `
-            <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:center;">
-              <div class="score-ring" style="background: conic-gradient(var(--accent) ${degrees}deg, #efe3d6 ${degrees}deg);">
-                <span>${overallScore}</span>
-              </div>
-              <div>
-                <div class="muted">Overall signal strength</div>
-                <div style="font-size:22px; font-weight:700;">${overallScore}/100</div>
-                <div class="muted">Based on code quality, testing, infra, and domain signals.</div>
-              </div>
-            </div>
-          `;
-
-          renderBars(scoresGrid, data.scores?.breakdown || {});
-          renderBars(specsGrid, data.scores?.specializations || {});
-
-          const topSpecs = topKeys(data.scores?.specializations, 2)
-            .map(([k, v]) => `${k.replace(/_/g, " ")} (${v}/100)`)
-            .join(", ");
-          const topSignals = topKeys(data.scores?.breakdown, 2)
-            .map(([k, v]) => `${k.replace(/_/g, " ")} (${v}/100)`)
-            .join(", ");
-          highlightsCard.innerHTML = `
-            <div class="muted">Key strengths</div>
-            <div style="font-size:18px; font-weight:700; margin-top:6px;">${topSpecs || "Not enough data"}</div>
-            <div class="muted" style="margin-top:8px;">Top signals: ${topSignals || "Not enough data"}</div>
-          `;
+          renderProfile(data.profile || {});
+          renderScore(data.analysis || {});
+          renderDimensions(data.analysis || {});
+          renderFlags(data.analysis || {});
+          renderSummary(data.analysis || {});
 
           resultEl.style.display = "block";
           statusEl.textContent = "Assessment complete.";
