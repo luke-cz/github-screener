@@ -1,8 +1,10 @@
 from fastapi import FastAPI, HTTPException, Query
-import requests
-import os
 
-app = FastAPI()
+from app.assess import assess_user
+from app.report import build_report_payload
+
+app = FastAPI(title="GitHub Assessor", version="0.1.0")
+
 
 def _normalize_username(value: str) -> str:
     trimmed = value.strip()
@@ -18,18 +20,20 @@ def _normalize_username(value: str) -> str:
         return path.split("/", 1)[0]
     return trimmed.lstrip("@")
 
+
 @app.get("/")
-@app.get("/assess")
-def assess(username: str = Query(..., min_length=1, max_length=80)):
+def assess(username: str = Query(..., min_length=1, max_length=80)) -> dict:
     try:
-        username = _normalize_username(username)
-        token = os.getenv("GITHUB_TOKEN")
-        headers = {"Accept": "application/vnd.github+json"}
-        if token:
-            headers["Authorization"] = f"Bearer {token}"
-        r = requests.get(f"https://api.github.com/users/{username}", headers=headers, timeout=20)
-        if r.status_code != 200:
-            raise HTTPException(status_code=400, detail=f"GitHub API error: {r.status_code}")
-        return {"username": username, "profile": r.json()}
+        normalized = _normalize_username(username)
+        result = assess_user(normalized)
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    payload = build_report_payload(
+        username=normalized,
+        user_info=result["user"],
+        repo_summaries=result["repos"],
+        specialization_scores=result["specialization_scores"],
+        score_breakdown=result["score_breakdown"],
+    )
+    return payload
