@@ -515,8 +515,18 @@ function renderResults(user, r) {
 
   const sigEl = document.getElementById('resSignals');
   sigEl.innerHTML = '';
-  (r.signals || []).forEach(s => {
-    sigEl.innerHTML += `<div class="signal ${s.color}"><div class="signal-dot"></div>${s.label}</div>`;
+  const normalizedSignals = (r.signals || []).length
+    ? r.signals
+    : (r.flags || []).map(f => ({
+        color: f.type === 'positive' ? 'green' : (f.type === 'warning' ? 'yellow' : 'red'),
+        label: f.text || f.label || ''
+      }));
+
+  normalizedSignals.forEach(s => {
+    if (!s) return;
+    const color = s.color || 'yellow';
+    const label = s.label || s.text || '';
+    sigEl.innerHTML += `<div class="signal ${color}"><div class="signal-dot"></div>${label}</div>`;
   });
 
   const sumEl = document.getElementById('resSummary');
@@ -549,7 +559,7 @@ async function runScreening() {
   try {
     setStatus('Assessing profile…', false, true);
 
-    const response = await fetch('/api/assess_ai', {
+    const response = await fetch('/api', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, domain: selectedDomain })
