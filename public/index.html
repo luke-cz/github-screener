@@ -1,426 +1,580 @@
-﻿<!doctype html>
+﻿<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>GitHub Screener</title>
-    <style>
-      :root {
-        --bg: #0d1117;
-        --panel: rgba(23, 28, 33, 0.92);
-        --ink: #e6edf3;
-        --muted: rgba(230, 237, 243, 0.68);
-        --accent: #58a6ff;
-        --accent-2: #bb80ff;
-        --border: rgba(230, 237, 243, 0.1);
-        --shadow: 0 14px 45px rgba(0, 0, 0, 0.35);
-      }
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GitHub Screener — Talent Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #18181f;
+    --border: #22222e;
+    --border-bright: #33334a;
+    --text: #e8e8f0;
+    --text-muted: #6b6b88;
+    --text-dim: #3a3a50;
+    --accent: #7c6af7;
+    --accent-dim: #2a2458;
+    --accent-glow: rgba(124, 106, 247, 0.15);
+    --green: #3ddc84;
+    --green-dim: #1a3d2b;
+    --yellow: #f5c842;
+    --yellow-dim: #3d3010;
+    --red: #f05c5c;
+    --red-dim: #3d1515;
+    --mono: 'JetBrains Mono', monospace;
+    --serif: 'Instrument Serif', serif;
+    --sans: 'DM Sans', sans-serif;
+  }
 
-      * { box-sizing: border-box; }
-      body {
-        margin: 0;
-        font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        background: radial-gradient(circle at 20% -10%, rgba(88, 166, 255, 0.22), transparent 55%),
-                    radial-gradient(circle at 80% 10%, rgba(187, 128, 255, 0.18), transparent 60%),
-                    linear-gradient(180deg, #05060a 0%, #0b0f16 45%, #0d1117 100%);
-        color: var(--ink);
-        min-height: 100vh;
-        padding: 0 18px;
-      }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
-      .wrap {
-        max-width: 1050px;
-        margin: 0 auto;
-        padding: 52px 0 90px;
-      }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
 
-      header {
-        display: grid;
-        gap: 12px;
-        margin-bottom: 30px;
-      }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.25;
+    pointer-events: none;
+    z-index: 0;
+  }
 
-      h1 {
-        margin: 0;
-        font-size: clamp(36px, 5vw, 56px);
-        letter-spacing: -0.02em;
-      }
+  .wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 60px 24px 100px;
+  }
 
-      .lead {
-        margin: 0;
-        color: var(--muted);
-        max-width: 720px;
-        line-height: 1.5;
-      }
+  header {
+    margin-bottom: 56px;
+  }
 
-      .hero {
-        display: grid;
-        grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
-        gap: 20px;
-        align-items: start;
-      }
+  .logo {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
 
-      .card {
-        background: var(--panel);
-        border: 1px solid var(--border);
-        border-radius: 18px;
-        padding: 22px;
-        box-shadow: var(--shadow);
-      }
+  .logo::before {
+    content: '';
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+  }
 
-      .form-card {
-        position: relative;
-        overflow: hidden;
-      }
+  h1 {
+    font-family: var(--serif);
+    font-size: clamp(32px, 5vw, 48px);
+    font-weight: 400;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    color: var(--text);
+    margin-bottom: 12px;
+  }
 
-      .form-card::after {
-        content: "";
-        position: absolute;
-        right: -80px;
-        top: -40px;
-        width: 180px;
-        height: 180px;
-        background: radial-gradient(circle, rgba(88, 166, 255, 0.25), transparent 70%);
-        pointer-events: none;
-      }
+  h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
 
-      form {
-        display: flex;
-        gap: 12px;
-        flex-wrap: wrap;
-        align-items: center;
-      }
+  .tagline {
+    color: var(--text-muted);
+    font-size: 14px;
+    font-family: var(--mono);
+    letter-spacing: 0.03em;
+  }
 
-      input, button, select {
-        font-size: 15px;
-        padding: 12px 14px;
-        border-radius: 12px;
-        border: 1px solid var(--border);
-        background: rgba(255, 255, 255, 0.06);
-        color: var(--ink);
-      }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    margin-bottom: 16px;
+  }
 
-      input:focus, select:focus {
-        outline: none;
-        border-color: var(--accent);
-        box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.22);
-      }
+  .card-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 14px;
+  }
 
-      input {
-        flex: 1;
-        min-width: 240px;
-      }
+  .input-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 0;
+  }
 
-      button {
-        background: linear-gradient(135deg, var(--accent), var(--accent-2));
-        color: #0b1220;
-        border: none;
-        cursor: pointer;
-        transition: transform 0.2s ease, filter 0.2s ease;
-        font-weight: 600;
-      }
+  input[type="text"] {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border-bright);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 14px;
+    padding: 13px 18px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    letter-spacing: 0.03em;
+  }
 
-      button:hover {
-        transform: translateY(-1px);
-        filter: brightness(1.05);
-      }
+  input[type="text"]::placeholder { color: var(--text-dim); }
+  input[type="text"]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
 
-      button:disabled {
-        opacity: 0.55;
-        cursor: not-allowed;
-      }
+  .domain-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 8px;
+    margin-bottom: 0;
+  }
 
-      .status {
-        margin-top: 12px;
-        color: var(--muted);
-        font-size: 13px;
-      }
+  .domain-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-muted);
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
 
-      .progress {
-        margin-top: 12px;
-        height: 10px;
-        background: rgba(255, 255, 255, 0.06);
-        border-radius: 999px;
-        overflow: hidden;
-        display: none;
-      }
+  .domain-btn:hover {
+    border-color: var(--border-bright);
+    color: var(--text);
+  }
 
-      .progress .bar {
-        height: 100%;
-        width: 0%;
-        background: linear-gradient(90deg, rgba(88, 166, 255, 0.9), rgba(187, 128, 255, 0.9));
-        animation: progressLoop 2.2s ease-in-out infinite;
-      }
+  .domain-btn.active {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
 
-      @keyframes progressLoop {
-        0% { width: 12%; transform: translateX(0); }
-        50% { width: 70%; transform: translateX(10%); }
-        100% { width: 12%; transform: translateX(90%); }
-      }
+  .domain-icon { font-size: 14px; }
 
-      .result {
-        margin-top: 26px;
-        display: none;
-      }
+  .run-btn {
+    width: 100%;
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-top: 16px;
+  }
 
-      .result h2 {
-        margin: 0 0 12px;
-        font-size: 20px;
-      }
+  .run-btn:hover { background: #9080ff; box-shadow: 0 4px 20px rgba(124,106,247,0.4); }
+  .run-btn:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
 
-      .grid {
-        display: grid;
-        gap: 14px;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      }
+  .status {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 14px;
+    min-height: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
 
-      .card.small {
-        padding: 16px;
-        border-radius: 16px;
-      }
+  .status.error { color: var(--red); }
 
-      .muted {
-        color: var(--muted);
-      }
+  .spinner {
+    width: 12px; height: 12px;
+    border: 2px solid var(--border-bright);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
 
-      .score-ring {
-        width: 128px;
-        height: 128px;
-        border-radius: 50%;
-        background: conic-gradient(var(--accent) 0deg, var(--accent) 0deg, rgba(255, 255, 255, 0.08) 0deg);
-        display: grid;
-        place-items: center;
-        margin-bottom: 12px;
-      }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
-      .score-ring span {
-        width: 92px;
-        height: 92px;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.07);
-        display: grid;
-        place-items: center;
-        font-size: 26px;
-        font-weight: 700;
-      }
+  #results { display: none; margin-top: 32px; }
+  #results.visible { display: block; animation: fadeUp 0.4s ease; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
 
-      .badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 6px 12px;
-        border-radius: 999px;
-        background: rgba(88, 166, 255, 0.12);
-        color: var(--accent);
-        font-size: 12px;
-      }
+  .profile-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .avatar {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    border: 2px solid var(--border-bright);
+  }
+  .profile-info .name {
+    font-family: var(--serif);
+    font-size: 22px;
+    font-weight: 400;
+  }
+  .profile-info .handle {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-muted);
+  }
 
-      .error {
-        margin-top: 14px;
-        padding: 12px 14px;
-        border-radius: 14px;
-        background: rgba(187, 64, 64, 0.18);
-        border: 1px solid rgba(187, 64, 64, 0.3);
-        color: #ffd5d5;
-      }
+  .verdict {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  .verdict.hire    { background: var(--green-dim); color: var(--green); border: 1px solid var(--green); }
+  .verdict.maybe   { background: var(--yellow-dim); color: var(--yellow); border: 1px solid var(--yellow); }
+  .verdict.pass    { background: var(--red-dim); color: var(--red); border: 1px solid var(--red); }
+  .verdict::before { content: '●'; font-size: 8px; }
 
-      @media (max-width: 880px) {
-        .hero { grid-template-columns: 1fr; }
-      }
+  .score-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  .score-number {
+    font-family: var(--serif);
+    font-size: 64px;
+    font-weight: 400;
+    line-height: 1;
+    color: var(--accent);
+  }
+  .score-denom {
+    font-family: var(--mono);
+    font-size: 16px;
+    color: var(--text-dim);
+  }
+  .score-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-left: 4px;
+    align-self: center;
+  }
 
-      @media (max-width: 600px) {
-        h1 { font-size: 34px; }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="wrap">
-      <header>
-        <h1>GitHub Screener</h1>
-        <p class="lead">Paste a GitHub profile URL or username, then assess the candidate with an AI-powered summary and score.</p>
-      </header>
+  .dims { margin-bottom: 24px; }
+  .dim-row {
+    display: grid;
+    grid-template-columns: 150px 1fr 36px;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  .dim-name {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .bar-track {
+    height: 4px;
+    background: var(--surface2);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    width: 0%;
+  }
+  .dim-val {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: right;
+  }
 
-      <section class="hero">
-        <div class="card form-card">
-          <form id="form">
-            <input id="username" type="text" placeholder="e.g. octocat or https://github.com/octocat" autocomplete="off" />
-            <input id="domain" type="text" placeholder="Domain (e.g. frontend, infra)" autocomplete="off" />
-            <button id="submit" type="submit">Assess</button>
-          </form>
-          <div id="status" class="status">Uses public GitHub data and a hosted AI model.</div>
-          <div id="progress" class="progress"><div class="bar"></div></div>
-          <div id="error" class="error" style="display:none;"></div>
-        </div>
+  .signals { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 24px; }
+  .signal {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .signal.green  { background: var(--green-dim);  color: var(--green); }
+  .signal.yellow { background: var(--yellow-dim); color: var(--yellow); }
+  .signal.red    { background: var(--red-dim);    color: var(--red); }
+  .signal-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
 
-        <div class="card">
-          <div class="badge">AI-powered</div>
-          <p class="muted" style="margin-top: 12px;">This endpoint analyzes public profile data, repos, and recent activity to surface strengths, risks, and fit.</p>
-          <p class="muted" style="margin-top: 10px;">Turn around reports quickly without exposing private data. Works best with active, public GitHub accounts.</p>
-        </div>
-      </section>
+  .summary-text {
+    font-size: 14px;
+    line-height: 1.75;
+    color: var(--text);
+  }
+  .summary-text p + p { margin-top: 12px; }
 
-      <div id="result" class="result">
-        <h2>Assessment</h2>
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 20px 0;
+  }
 
-        <div class="grid">
-          <div class="card small" id="profile-card"></div>
-          <div class="card small" id="score-card"></div>
-        </div>
+  .section-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+  }
 
-        <div class="grid" style="margin-top: 14px;">
-          <div class="card small" id="dimensions-card"></div>
-          <div class="card small" id="flags-card"></div>
-        </div>
+  footer {
+    margin-top: 80px;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
 
-        <div class="card" id="summary-card" style="margin-top: 16px;"></div>
-      </div>
+  <header>
+    <div class="logo">GitHub Screener</div>
+    <h1>Talent <em>intelligence</em><br>for technical hiring.</h1>
+    <p class="tagline">// AI-powered analysis of GitHub profiles</p>
+  </header>
+
+  <div class="card">
+    <div class="card-label">GitHub Profile</div>
+    <div class="input-row">
+      <input type="text" id="handleInput" placeholder="username or github.com/username" />
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Skill Domain</div>
+    <div class="domain-grid" id="domainGrid">
+      <button class="domain-btn active" data-domain="Backend" onclick="selectDomain(this)"><span class="domain-icon">⚙️</span> Backend</button>
+      <button class="domain-btn" data-domain="Frontend" onclick="selectDomain(this)"><span class="domain-icon">🎨</span> Frontend</button>
+      <button class="domain-btn" data-domain="Smart Contracts" onclick="selectDomain(this)"><span class="domain-icon">🔗</span> Smart Contracts</button>
+      <button class="domain-btn" data-domain="ML / AI" onclick="selectDomain(this)"><span class="domain-icon">🧠</span> ML / AI</button>
+      <button class="domain-btn" data-domain="DevOps" onclick="selectDomain(this)"><span class="domain-icon">🚀</span> DevOps</button>
+      <button class="domain-btn" data-domain="Data Engineering" onclick="selectDomain(this)"><span class="domain-icon">📊</span> Data</button>
+      <button class="domain-btn" data-domain="Mobile" onclick="selectDomain(this)"><span class="domain-icon">📱</span> Mobile</button>
+      <button class="domain-btn" data-domain="Security" onclick="selectDomain(this)"><span class="domain-icon">🔐</span> Security</button>
     </div>
 
-    <script>
-      const form = document.getElementById("form");
-      const statusEl = document.getElementById("status");
-      const progressEl = document.getElementById("progress");
-      const errorEl = document.getElementById("error");
-      const resultEl = document.getElementById("result");
-      const profileCard = document.getElementById("profile-card");
-      const scoreCard = document.getElementById("score-card");
-      const dimensionsCard = document.getElementById("dimensions-card");
-      const flagsCard = document.getElementById("flags-card");
-      const summaryCard = document.getElementById("summary-card");
-      const submitButton = document.getElementById("submit");
+    <button class="run-btn" id="runBtn" onclick="runScreening()">Run Screening →</button>
+    <div class="status" id="status"></div>
+  </div>
 
-      function normalizeUsername(value) {
-        const trimmed = value.trim();
-        if (!trimmed) return "";
-        const lowered = trimmed.toLowerCase();
-        if (lowered.startsWith("http://") || lowered.startsWith("https://")) {
-          try {
-            const url = new URL(trimmed);
-            const parts = url.pathname.split("/").filter(Boolean);
-            return parts[0] || "";
-          } catch {
-            return trimmed;
-          }
-        }
-        if (trimmed.includes("github.com/")) {
-          const idx = trimmed.toLowerCase().indexOf("github.com/");
-          const rest = trimmed.slice(idx + "github.com/".length);
-          return rest.split("/")[0] || "";
-        }
-        return trimmed.replace(/^@/, "");
-      }
+  <div id="results">
+    <div class="card">
+      <div class="profile-row">
+        <img class="avatar" id="resAvatar" src="" alt="">
+        <div class="profile-info">
+          <div class="name" id="resName"></div>
+          <div class="handle" id="resHandle"></div>
+        </div>
+      </div>
 
-      function renderProfile(profile) {
-        profileCard.innerHTML = `
-          <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
-            <img src="${profile.avatar_url || ""}" width="64" height="64" style="border-radius:18px;" alt="avatar" />
-            <div>
-              <div style="font-weight:700; font-size:18px;">${profile.login || "unknown"}</div>
-              <div class="muted">${profile.name || ""}</div>
-              <div class="muted" style="margin-top:6px;">${profile.bio || ""}</div>
-            </div>
-          </div>
-        `;
-      }
+      <div class="verdict" id="resVerdict"></div>
 
-      function renderScore(analysis) {
-        const score = Number(analysis.overallScore ?? 0);
-        const degrees = Math.min(100, Math.max(0, score)) * 3.6;
-        scoreCard.innerHTML = `
-          <div style="display:flex; gap:14px; align-items:center; flex-wrap:wrap;">
-            <div class="score-ring" style="background: conic-gradient(var(--accent) ${degrees}deg, rgba(255,255,255,0.08) ${degrees}deg);">
-              <span>${score}</span>
-            </div>
-            <div>
-              <div class="muted">Verdict</div>
-              <div style="font-size:18px; font-weight:700;">${analysis.verdict || "—"}</div>
-              <div class="muted" style="margin-top:6px;">${analysis.headline || ""}</div>
-            </div>
-          </div>
-        `;
-      }
+      <div class="score-row">
+        <div class="score-number" id="resScore">—</div>
+        <div class="score-denom">/100</div>
+        <div class="score-label" id="resDomain"></div>
+      </div>
 
-      function renderDimensions(analysis) {
-        const items = (analysis.dimensions || []).slice(0, 4);
-        if (!items.length) {
-          dimensionsCard.innerHTML = `<div class="muted">No dimension data available.</div>`;
-          return;
-        }
-        dimensionsCard.innerHTML = items
-          .map((d) => `
-            <div style="margin-bottom: 10px;">
-              <div class="muted">${d.name}</div>
-              <div style="font-weight:700; margin-top:4px;">${d.score ?? 0}/100</div>
-              <div class="muted" style="font-size:13px; margin-top:4px;">${d.note || ""}</div>
-            </div>
-          `)
-          .join("");
-      }
+      <div class="dims" id="resDims"></div>
 
-      function renderFlags(analysis) {
-        const flags = (analysis.flags || []).slice(0, 5);
-        if (!flags.length) {
-          flagsCard.innerHTML = `<div class="muted">No flags.</div>`;
-          return;
-        }
-        flagsCard.innerHTML = flags
-          .map((f) => `
-            <div style="margin-bottom:10px;">
-              <div style="font-weight:700;">${f.type || "note"}</div>
-              <div class="muted" style="margin-top:4px;">${f.text || ""}</div>
-            </div>
-          `)
-          .join("");
-      }
+      <hr class="divider">
 
-      function renderSummary(analysis) {
-        summaryCard.innerHTML = `
-          <div style="font-weight:700; margin-bottom:12px;">Summary</div>
-          <div style="line-height:1.6; white-space: pre-wrap;">${analysis.summary || "No summary available."}</div>
-        `;
-      }
+      <div class="section-title">Signals</div>
+      <div class="signals" id="resSignals"></div>
 
-      form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        errorEl.style.display = "none";
-        resultEl.style.display = "none";
+      <hr class="divider">
 
-        const rawUsername = document.getElementById("username").value;
-        const rawDomain = document.getElementById("domain").value;
-        const username = normalizeUsername(rawUsername);
-        const domain = rawDomain.trim();
-        if (!username) return;
+      <div class="section-title">Recruiter Summary</div>
+      <div class="summary-text" id="resSummary"></div>
+    </div>
+  </div>
 
-        submitButton.disabled = true;
-        progressEl.style.display = "block";
-        statusEl.textContent = "Fetching profile and generating analysis...";
+  <footer>github-screener · powered by AI</footer>
+</div>
 
-        try {
-          const res = await fetch("/api/assess_ai", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, domain }),
-          });
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.detail || "Request failed");
+<script>
+let selectedDomain = 'Backend';
 
-          renderProfile(data.profile || {});
-          renderScore(data.analysis || {});
-          renderDimensions(data.analysis || {});
-          renderFlags(data.analysis || {});
-          renderSummary(data.analysis || {});
+function selectDomain(btn) {
+  document.querySelectorAll('.domain-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedDomain = btn.dataset.domain;
+}
 
-          resultEl.style.display = "block";
-          statusEl.textContent = "Assessment complete.";
-        } catch (err) {
-          errorEl.textContent = `Error: ${err.message}`;
-          errorEl.style.display = "block";
-          statusEl.textContent = "Assessment failed.";
-        } finally {
-          progressEl.style.display = "none";
-          submitButton.disabled = false;
-        }
-      });
-    </script>
-  </body>
+function parseHandle(raw) {
+  raw = raw.trim();
+  const m = raw.match(/github\.com\/([a-zA-Z0-9\-]+)/);
+  return m ? m[1] : raw.replace(/^@/, '');
+}
+
+function setStatus(msg, isError = false, loading = false) {
+  const el = document.getElementById('status');
+  el.className = 'status' + (isError ? ' error' : '');
+  el.innerHTML = loading ? `<div class="spinner"></div> ${msg}` : msg;
+}
+
+function renderResults(user, r) {
+  document.getElementById('resAvatar').src = user.avatar_url;
+  document.getElementById('resName').textContent = user.name || user.login;
+  document.getElementById('resHandle').textContent = `@${user.login}`;
+
+  const score = r.overallScore ?? r.overall_score ?? 0;
+  document.getElementById('resScore').textContent = score;
+  document.getElementById('resDomain').textContent = selectedDomain;
+
+  const verdictEl = document.getElementById('resVerdict');
+  const verdict = (r.verdict || '').toLowerCase();
+  verdictEl.textContent = r.verdict || 'N/A';
+  verdictEl.className = 'verdict ' + (
+    verdict.includes('strong hire') || verdict.includes('hire') ? 'hire' :
+    verdict.includes('maybe') ? 'maybe' : 'pass'
+  );
+
+  const dimsEl = document.getElementById('resDims');
+  dimsEl.innerHTML = '';
+  (r.dimensions || []).forEach(d => {
+    dimsEl.innerHTML += `
+      <div class="dim-row">
+        <div class="dim-name">${d.name}</div>
+        <div class="bar-track"><div class="bar-fill" data-val="${d.score}"></div></div>
+        <div class="dim-val">${d.score}</div>
+      </div>`;
+  });
+
+  const sigEl = document.getElementById('resSignals');
+  sigEl.innerHTML = '';
+  (r.signals || []).forEach(s => {
+    sigEl.innerHTML += `<div class="signal ${s.color}"><div class="signal-dot"></div>${s.label}</div>`;
+  });
+
+  const sumEl = document.getElementById('resSummary');
+  sumEl.innerHTML = (r.summary || '').split('\n').filter(Boolean).map(p => `<p>${p}</p>`).join('');
+
+  const resultsEl = document.getElementById('results');
+  resultsEl.classList.add('visible');
+
+  requestAnimationFrame(() => {
+    document.querySelectorAll('.bar-fill').forEach(b => {
+      b.style.width = b.dataset.val + '%';
+    });
+  });
+
+  resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function runScreening() {
+  const handleRaw = document.getElementById('handleInput').value.trim();
+  if (!handleRaw) {
+    setStatus('Please enter a GitHub username.', true);
+    return;
+  }
+
+  const username = parseHandle(handleRaw);
+  const btn = document.getElementById('runBtn');
+  btn.disabled = true;
+  document.getElementById('results').classList.remove('visible');
+
+  try {
+    setStatus('Assessing profile…', false, true);
+
+    const response = await fetch('/api/assess_ai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, domain: selectedDomain })
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.detail || `API error ${response.status}`);
+    }
+
+    renderResults(data.profile || {}, data.analysis || {});
+    setStatus('Assessment complete.');
+  } catch (err) {
+    setStatus(err.message, true);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// Enter key support
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('handleInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') runScreening();
+  });
+});
+</script>
+</body>
 </html>
