@@ -7,6 +7,65 @@ import requests
 
 app = FastAPI()
 
+PRESTIGE_FILE = os.path.join(os.path.dirname(__file__), "..", "prestige_orgs.json")
+
+
+def _norm_token(value: str) -> str:
+    return (
+        value.lower()
+        .replace("&", "and")
+        .replace("/", " ")
+        .replace(",", " ")
+        .replace(".", " ")
+        .replace("  ", " ")
+        .strip()
+        .replace(" ", "-")
+    )
+
+
+def _flatten_orgs(section: dict) -> list:
+    items = []
+    if not isinstance(section, dict):
+        return items
+    for _, entries in section.items():
+        if isinstance(entries, list):
+            items.extend(entries)
+    return items
+
+
+def _load_prestige_orgs() -> dict:
+    try:
+        with open(PRESTIGE_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except Exception:
+        return {"web2": [], "web3": []}
+
+    web2 = _flatten_orgs(data.get("web2", {}))
+    web3 = _flatten_orgs(data.get("web3", {}))
+    return {"web2": web2, "web3": web3}
+
+
+PRESTIGE_ORGS = _load_prestige_orgs()
+
+
+def _index_prestige(orgs: list) -> dict:
+    index = {}
+    for item in orgs:
+        if not isinstance(item, dict):
+            continue
+        name = item.get("name") or ""
+        slug = item.get("slug") or _norm_token(name)
+        formerly = item.get("formerly") or ""
+        for token in {slug, _norm_token(name), _norm_token(formerly)}:
+            if token:
+                index[token] = name
+    return index
+
+
+PRESTIGE_INDEX = {
+    "web2": _index_prestige(PRESTIGE_ORGS.get("web2", [])),
+    "web3": _index_prestige(PRESTIGE_ORGS.get("web3", [])),
+}
 
 class AssessRequest(BaseModel):
     username: str
@@ -109,6 +168,40 @@ def _repo_signals(owner: str, repo: str) -> dict:
     return {"files": names, "signals": signals}
 
 
+def _fetch_recent_contributions(username: str, limit: int = 20):
+    try:
+        events = _fetch_github_json(f"/users/{username}/events/public?per_page=50")
+    except HTTPException:
+        return []
+    repos = []
+    for ev in events:
+        repo = ev.get("repo", {}) if isinstance(ev, dict) else {}
+        name = repo.get("name")
+        if name:
+            repos.append(name)
+        if len(repos) >= limit:
+            break
+    return list(dict.fromkeys(repos))
+
+
+def _org_reputation(org: str) -> dict:
+    try:
+        data = _fetch_github_json(f"/orgs/{org}")
+    except HTTPException:
+        return {}
+    return {
+        "login": data.get("login"),
+        "name": data.get("name"),
+        "blog": data.get("blog"),
+        "followers": data.get("followers"),
+        "public_repos": data.get("public_repos"),
+    }
+
+
+def _normalize_org(value: str) -> str:
+    return _norm_token(value)
+
+
 @app.get("/")
 def health() -> dict:
     return {"status": "ok"}
@@ -169,6 +262,33 @@ def assess_ai(payload: AssessRequest) -> dict:
             }
         )
 
+    recent_contribs = _fetch_recent_contributions(username)
+    contrib_orgs = set()
+    for full_name in recent_contribs[:10]:
+        if "/" in full_name:
+            org = _normalize_org(full_name.split("/", 1)[0])
+            contrib_orgs.add(org)
+
+    org_reputation = []
+    for org in list(contrib_orgs)[:5]:
+        org_reputation.append(_org_reputation(org))
+
+    company_field = (profile.get("company") or "")
+    bio_field = (profile.get("bio") or "")
+    text_fields = f"{company_field} {bio_field}".lower()
+
+    def _match_prestige(index: dict) -> list:
+        hits = set()
+        for token, display in index.items():
+            if token in contrib_orgs or token in text_fields:
+                hits.add(display)
+        return sorted(hits)
+
+    prestige_hits = {
+        "web2": _match_prestige(PRESTIGE_INDEX["web2"]),
+        "web3": _match_prestige(PRESTIGE_INDEX["web3"]),
+    }
+
     api_key = os.getenv("ANTHROPIC_API_KEY")
     if not api_key:
         raise HTTPException(status_code=500, detail="Missing ANTHROPIC_API_KEY.")
@@ -199,9 +319,19 @@ Top repositories:
 Repo evidence (file signals + README excerpts when available):
 {repo_evidence}
 
+Recent contributed repos (from public events):
+{recent_contribs}
+
+Organization reputation (from org profiles, if available):
+{org_reputation}
+
+Prestige org matches (web2/web3/investor brands):
+{prestige_hits}
+
 When scoring Code Quality, rely on concrete evidence from repo files/signals. If evidence is weak, mention low confidence in the note, but do not penalize for low activity alone.
 Do NOT downgrade scores just because repo activity is infrequent. Treat low activity as neutral unless there are clear red flags.
 If there are no red flags, keep scores in a healthy range even with modest public activity.
+Positive reputation signals (well-known orgs or reputable employers) can increase confidence and overall assessment when supported by evidence.
 
 Return a JSON object with exactly this structure:
 {{
@@ -261,4 +391,3 @@ Return a JSON object with exactly this structure:
         "repos": repo_summary,
         "analysis": analysis,
     }
-

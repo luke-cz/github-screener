@@ -569,14 +569,32 @@
 </div>
 
 <script>
-let selectedDomain = 'Backend';
+let selectedDomains = ['Backend'];
 const STORAGE_KEY = 'gh-screener-saved';
 const STORAGE_FILTER_KEY = 'gh-screener-saved-filter';
 
 function selectDomain(btn) {
-  document.querySelectorAll('.domain-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  selectedDomain = btn.dataset.domain;
+  const domain = btn.dataset.domain;
+  if (!domain) return;
+  const exists = selectedDomains.includes(domain);
+  if (exists) {
+    selectedDomains = selectedDomains.filter(d => d !== domain);
+    btn.classList.remove('active');
+  } else {
+    if (selectedDomains.length >= 3) {
+      setStatus('Select up to 3 specializations.', true);
+      return;
+    }
+    selectedDomains.push(domain);
+    btn.classList.add('active');
+  }
+  if (selectedDomains.length === 0) {
+    selectedDomains = ['Backend'];
+    document.querySelectorAll('.domain-btn').forEach(b => {
+      if (b.dataset.domain === 'Backend') b.classList.add('active');
+    });
+  }
+  setStatus(`Selected: ${selectedDomains.join(', ')}`);
 }
 
 function parseHandle(raw) {
@@ -598,7 +616,7 @@ function renderResults(user, r) {
 
   const score = r.overallScore ?? r.overall_score ?? 0;
   document.getElementById('resScore').textContent = score;
-  document.getElementById('resDomain').textContent = selectedDomain;
+  document.getElementById('resDomain').textContent = selectedDomains.join(', ');
 
   const verdictEl = document.getElementById('resVerdict');
   const verdict = (r.verdict || '').toLowerCase();
@@ -698,7 +716,11 @@ function renderSaved() {
     const row = document.createElement('div');
     row.className = 'saved-item';
     row.onclick = () => {
-      selectedDomain = item.domain || selectedDomain;
+      selectedDomains = (item.domain || '').split(',').map(s => s.trim()).filter(Boolean);
+      if (selectedDomains.length === 0) selectedDomains = ['Backend'];
+      document.querySelectorAll('.domain-btn').forEach(b => {
+        b.classList.toggle('active', selectedDomains.includes(b.dataset.domain));
+      });
       renderResults(item.profile || {}, item.analysis || {});
     };
     row.innerHTML = `
@@ -778,7 +800,7 @@ async function runScreening() {
     const response = await fetch('/api', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, domain: selectedDomain })
+      body: JSON.stringify({ username, domain: selectedDomains.join(', ') })
     });
 
     const data = await response.json();
@@ -787,7 +809,7 @@ async function runScreening() {
     }
 
     renderResults(data.profile || {}, data.analysis || {});
-    saveAssessment(data.profile || {}, data.analysis || {}, selectedDomain);
+    saveAssessment(data.profile || {}, data.analysis || {}, selectedDomains.join(', '));
     setStatus('Assessment complete.');
   } catch (err) {
     setStatus(err.message, true);
@@ -801,6 +823,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('handleInput').addEventListener('keydown', e => {
     if (e.key === 'Enter') runScreening();
   });
+  setStatus(`Selected: ${selectedDomains.join(', ')}`);
   const search = document.getElementById('savedSearch');
   if (search) {
     const prev = localStorage.getItem(STORAGE_FILTER_KEY) || '';
