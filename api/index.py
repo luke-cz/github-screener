@@ -49,11 +49,17 @@ def _fetch_github_json(path: str):
         raise HTTPException(status_code=400, detail=f"GitHub API error: {res.status_code}{extra}")
     return res.json()
 
-
 @app.get("/")
 def health() -> dict:
     return {"status": "ok"}
 
+@app.get("/api")
+def health_api() -> dict:
+    return {"status": "ok"}
+
+@app.post("/api")
+def assess_api(payload: AssessRequest) -> dict:
+    return assess_ai(payload)
 
 @app.post("/")
 @app.post("/assess_ai")
