@@ -235,14 +235,41 @@ def assess_ai(payload: AssessRequest) -> dict:
             "forks": r.get("forks_count"),
             "updatedAt": (r.get("updated_at") or "")[:10],
             "fork": r.get("fork"),
+            "archived": r.get("archived"),
+            "owner": (r.get("owner") or {}).get("login"),
         }
         for r in repos[:10]
     ]
+
+    def _is_prestige_owner(owner_login: str) -> bool:
+        if not owner_login:
+            return False
+        token = _normalize_org(owner_login)
+        return token in PRESTIGE_INDEX["web2"] or token in PRESTIGE_INDEX["web3"]
 
     top_repos = [r for r in repos if not r.get("fork")]
     if not top_repos:
         top_repos = repos[:3]
     top_repos = top_repos[:3]
+
+    # Include older/archived repos if they belong to reputable orgs.
+    older_prestige = []
+    for r in repos:
+        owner_login = (r.get("owner") or {}).get("login")
+        if _is_prestige_owner(owner_login):
+            older_prestige.append(r)
+    # Deduplicate and cap
+    seen = set()
+    merged = []
+    for r in top_repos + older_prestige:
+        name = r.get("name")
+        if not name or name in seen:
+            continue
+        seen.add(name)
+        merged.append(r)
+        if len(merged) >= 6:
+            break
+    top_repos = merged
 
     repo_evidence = []
     for r in top_repos:
@@ -257,6 +284,9 @@ def assess_ai(payload: AssessRequest) -> dict:
         repo_evidence.append(
             {
                 "name": name,
+                "owner": (r.get("owner") or {}).get("login"),
+                "archived": r.get("archived"),
+                "updatedAt": (r.get("updated_at") or "")[:10],
                 "signals": signals.get("signals", []),
                 "readme_excerpt": readme[:1200],
             }
@@ -320,6 +350,8 @@ Top repositories:
 
 Repo evidence (file signals + README excerpts when available):
 {repo_evidence}
+
+Include relevant older or archived repos if they show reputable experience.
 
 Recent contributed repos (from public events):
 {recent_contribs}
