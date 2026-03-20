@@ -199,7 +199,9 @@ Top repositories:
 Repo evidence (file signals + README excerpts when available):
 {repo_evidence}
 
-When scoring Code Quality, rely on concrete evidence from repo files/signals. If evidence is weak, lower the score and mention low confidence in the note.
+When scoring Code Quality, rely on concrete evidence from repo files/signals. If evidence is weak, mention low confidence in the note, but do not penalize for low activity alone.
+Do NOT downgrade scores just because repo activity is infrequent. Treat low activity as neutral unless there are clear red flags.
+If there are no red flags, keep scores in a healthy range even with modest public activity.
 
 Return a JSON object with exactly this structure:
 {{
