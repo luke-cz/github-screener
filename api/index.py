@@ -131,7 +131,7 @@ Return a JSON object with exactly this structure:
             "anthropic-version": "2023-06-01",
         },
         json={
-            "model": "claude-3-5-sonnet-20240620",
+            "model": "claude-3-5-sonnet-latest",
             "max_tokens": 1500,
             "system": system_prompt,
             "messages": [{"role": "user", "content": user_prompt}],
