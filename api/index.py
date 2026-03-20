@@ -49,17 +49,21 @@ def _fetch_github_json(path: str):
         raise HTTPException(status_code=400, detail=f"GitHub API error: {res.status_code}{extra}")
     return res.json()
 
+
 @app.get("/")
 def health() -> dict:
     return {"status": "ok"}
+
 
 @app.get("/api")
 def health_api() -> dict:
     return {"status": "ok"}
 
+
 @app.post("/api")
 def assess_api(payload: AssessRequest) -> dict:
     return assess_ai(payload)
+
 
 @app.post("/")
 @app.post("/assess_ai")
@@ -85,6 +89,10 @@ def assess_ai(payload: AssessRequest) -> dict:
     api_key = os.getenv("ANTHROPIC_API_KEY")
     if not api_key:
         raise HTTPException(status_code=500, detail="Missing ANTHROPIC_API_KEY.")
+
+    model = os.getenv("ANTHROPIC_MODEL")
+    if not model:
+        raise HTTPException(status_code=500, detail="Missing ANTHROPIC_MODEL.")
 
     system_prompt = (
         "You are a senior technical recruiter and assessor. "
@@ -131,7 +139,7 @@ Return a JSON object with exactly this structure:
             "anthropic-version": "2023-06-01",
         },
         json={
-            "model": "claude-3-5-sonnet-latest",
+            "model": model,
             "max_tokens": 1500,
             "system": system_prompt,
             "messages": [{"role": "user", "content": user_prompt}],
