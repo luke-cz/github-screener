@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+import base64
 import json
 import os
 import requests
@@ -50,6 +51,64 @@ def _fetch_github_json(path: str):
     return res.json()
 
 
+def _fetch_repo_dir(owner: str, repo: str, path: str = ""):
+    safe_path = f"/{path.strip('/')}" if path else ""
+    return _fetch_github_json(f"/repos/{owner}/{repo}/contents{safe_path}")
+
+
+def _fetch_repo_text_file(owner: str, repo: str, path: str, limit: int = 2000) -> str:
+    try:
+        data = _fetch_repo_dir(owner, repo, path)
+    except HTTPException:
+        return ""
+    if not isinstance(data, dict) or data.get("type") != "file":
+        return ""
+    content = data.get("content") or ""
+    if data.get("encoding") == "base64" and content:
+        try:
+            text = base64.b64decode(content).decode("utf-8", errors="ignore")
+        except Exception:
+            return ""
+        return text[:limit]
+    return ""
+
+
+def _repo_signals(owner: str, repo: str) -> dict:
+    try:
+        entries = _fetch_repo_dir(owner, repo)
+    except HTTPException:
+        return {"files": [], "signals": []}
+
+    if not isinstance(entries, list):
+        return {"files": [], "signals": []}
+
+    names = [e.get("name", "") for e in entries if isinstance(e, dict)]
+    lower = {n.lower(): n for n in names}
+
+    def _has_any(prefixes):
+        return any(p in lower for p in prefixes)
+
+    has_tests = _has_any(["tests", "test", "__tests__"])
+    has_ci = ".github" in lower or _has_any([".travis.yml", "circleci", "azure-pipelines.yml"])
+    has_docs = _has_any(["readme.md", "docs"])
+    has_lint = _has_any([".eslintrc", ".eslintrc.js", ".eslintrc.json", ".pylintrc", "ruff.toml"])
+    has_build = _has_any(["package.json", "pyproject.toml", "cargo.toml", "go.mod"])
+
+    signals = []
+    if has_tests:
+        signals.append("tests folder present")
+    if has_ci:
+        signals.append("ci/workflows present")
+    if has_docs:
+        signals.append("readme/docs present")
+    if has_lint:
+        signals.append("lint config present")
+    if has_build:
+        signals.append("build config present")
+
+    return {"files": names, "signals": signals}
+
+
 @app.get("/")
 def health() -> dict:
     return {"status": "ok"}
@@ -82,9 +141,33 @@ def assess_ai(payload: AssessRequest) -> dict:
             "stars": r.get("stargazers_count"),
             "forks": r.get("forks_count"),
             "updatedAt": (r.get("updated_at") or "")[:10],
+            "fork": r.get("fork"),
         }
         for r in repos[:10]
     ]
+
+    top_repos = [r for r in repos if not r.get("fork")]
+    if not top_repos:
+        top_repos = repos[:3]
+    top_repos = top_repos[:3]
+
+    repo_evidence = []
+    for r in top_repos:
+        name = r.get("name")
+        if not name:
+            continue
+        signals = _repo_signals(username, name)
+        readme = (
+            _fetch_repo_text_file(username, name, "README.md")
+            or _fetch_repo_text_file(username, name, "readme.md")
+        )
+        repo_evidence.append(
+            {
+                "name": name,
+                "signals": signals.get("signals", []),
+                "readme_excerpt": readme[:1200],
+            }
+        )
 
     api_key = os.getenv("ANTHROPIC_API_KEY")
     if not api_key:
@@ -112,6 +195,11 @@ Profile:
 
 Top repositories:
 {repo_summary}
+
+Repo evidence (file signals + README excerpts when available):
+{repo_evidence}
+
+When scoring Code Quality, rely on concrete evidence from repo files/signals. If evidence is weak, lower the score and mention low confidence in the note.
 
 Return a JSON object with exactly this structure:
 {{

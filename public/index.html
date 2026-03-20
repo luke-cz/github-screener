@@ -386,6 +386,98 @@
     margin-bottom: 12px;
   }
 
+  .saved-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .saved-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .saved-search {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    min-width: 180px;
+  }
+
+  .saved-search::placeholder { color: var(--text-dim); }
+
+  .saved-list {
+    display: grid;
+    gap: 10px;
+  }
+
+  .saved-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: border-color 0.15s ease, transform 0.15s ease;
+  }
+
+  .saved-item:hover {
+    border-color: var(--border-bright);
+    transform: translateY(-1px);
+  }
+
+  .saved-meta {
+    display: grid;
+    gap: 2px;
+  }
+
+  .saved-title {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text);
+  }
+
+  .saved-sub {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .saved-score {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+  }
+
+  .saved-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .ghost-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .ghost-btn:hover { color: var(--text); border-color: var(--border-bright); }
+
   footer {
     margin-top: 80px;
     text-align: center;
@@ -429,6 +521,18 @@
     <div class="status" id="status"></div>
   </div>
 
+  <div class="card" id="savedCard">
+    <div class="saved-wrap">
+      <div class="card-label" style="margin-bottom:0;">Saved Assessments</div>
+      <div class="saved-controls">
+        <input class="saved-search" id="savedSearch" placeholder="Search saved..." />
+        <button class="ghost-btn" id="exportSavedBtn" onclick="exportSaved()">Export CSV</button>
+        <button class="ghost-btn" id="clearSavedBtn" onclick="clearSaved()">Clear</button>
+      </div>
+    </div>
+    <div class="saved-list" id="savedList"></div>
+  </div>
+
   <div id="results">
     <div class="card">
       <div class="profile-row">
@@ -466,6 +570,8 @@
 
 <script>
 let selectedDomain = 'Backend';
+const STORAGE_KEY = 'gh-screener-saved';
+const STORAGE_FILTER_KEY = 'gh-screener-saved-filter';
 
 function selectDomain(btn) {
   document.querySelectorAll('.domain-btn').forEach(b => b.classList.remove('active'));
@@ -544,6 +650,116 @@ function renderResults(user, r) {
   resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+function loadSaved() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  } catch {
+    return [];
+  }
+}
+
+function saveAssessment(profile, analysis, domain) {
+  const saved = loadSaved();
+  const entry = {
+    id: `${profile.login || 'unknown'}-${Date.now()}`,
+    username: profile.login || '',
+    name: profile.name || '',
+    domain: domain || '',
+    verdict: analysis.verdict || '',
+    score: analysis.overallScore ?? analysis.overall_score ?? 0,
+    profile,
+    analysis,
+    createdAt: new Date().toISOString()
+  };
+  const next = [entry, ...saved].slice(0, 20);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  renderSaved();
+}
+
+function renderSaved() {
+  const list = document.getElementById('savedList');
+  const saved = loadSaved();
+  const query = (document.getElementById('savedSearch')?.value || '').trim().toLowerCase();
+  list.innerHTML = '';
+  const filtered = query
+    ? saved.filter(item =>
+        (item.name || '').toLowerCase().includes(query) ||
+        (item.username || '').toLowerCase().includes(query) ||
+        (item.domain || '').toLowerCase().includes(query) ||
+        (item.verdict || '').toLowerCase().includes(query)
+      )
+    : saved;
+
+  if (!filtered.length) {
+    list.innerHTML = '<div class="saved-sub">No saved assessments yet.</div>';
+    return;
+  }
+  filtered.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'saved-item';
+    row.onclick = () => {
+      selectedDomain = item.domain || selectedDomain;
+      renderResults(item.profile || {}, item.analysis || {});
+    };
+    row.innerHTML = `
+      <div class="saved-meta">
+        <div class="saved-title">${item.name || item.username || 'Unknown'}</div>
+        <div class="saved-sub">@${item.username || 'n/a'} • ${item.domain || 'General'} • ${new Date(item.createdAt).toLocaleDateString()}</div>
+      </div>
+      <div class="saved-actions">
+        <div class="saved-score">${item.score}/100</div>
+        <button class="ghost-btn" data-id="${item.id}">Delete</button>
+      </div>
+    `;
+    row.querySelector('button[data-id]')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      deleteSaved(item.id);
+    });
+    list.appendChild(row);
+  });
+}
+
+function clearSaved() {
+  localStorage.removeItem(STORAGE_KEY);
+  renderSaved();
+}
+
+function deleteSaved(id) {
+  const saved = loadSaved().filter(item => item.id !== id);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+  renderSaved();
+}
+
+function exportSaved() {
+  const saved = loadSaved();
+  if (!saved.length) {
+    setStatus('No saved assessments to export.', true);
+    return;
+  }
+  const header = ['name','username','domain','score','verdict','createdAt'];
+  const rows = saved.map(s => [
+    s.name || '',
+    s.username || '',
+    s.domain || '',
+    s.score ?? '',
+    s.verdict || '',
+    s.createdAt || ''
+  ]);
+  const csv = [header, ...rows]
+    .map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'github-screener-assessments.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  setStatus('Exported saved assessments.', false);
+}
+
 async function runScreening() {
   const handleRaw = document.getElementById('handleInput').value.trim();
   if (!handleRaw) {
@@ -571,6 +787,7 @@ async function runScreening() {
     }
 
     renderResults(data.profile || {}, data.analysis || {});
+    saveAssessment(data.profile || {}, data.analysis || {}, selectedDomain);
     setStatus('Assessment complete.');
   } catch (err) {
     setStatus(err.message, true);
@@ -584,6 +801,16 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('handleInput').addEventListener('keydown', e => {
     if (e.key === 'Enter') runScreening();
   });
+  const search = document.getElementById('savedSearch');
+  if (search) {
+    const prev = localStorage.getItem(STORAGE_FILTER_KEY) || '';
+    search.value = prev;
+    search.addEventListener('input', () => {
+      localStorage.setItem(STORAGE_FILTER_KEY, search.value || '');
+      renderSaved();
+    });
+  }
+  renderSaved();
 });
 </script>
 </body>
