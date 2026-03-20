@@ -300,6 +300,8 @@ def assess_ai(payload: AssessRequest) -> dict:
     system_prompt = (
         "You are a senior technical recruiter and assessor. "
         "Be precise, honest, and evidence-based. "
+        "Write in a human, professional-but-casual tone. "
+        "Avoid AI fluff and overhype. "
         "Return ONLY valid JSON, no markdown."
     )
 
@@ -331,7 +333,9 @@ Prestige org matches (web2/web3/investor brands):
 When scoring Code Quality, rely on concrete evidence from repo files/signals. If evidence is weak, mention low confidence in the note, but do not penalize for low activity alone.
 Do NOT downgrade scores just because repo activity is infrequent. Treat low activity as neutral unless there are clear red flags.
 If there are no red flags, keep scores in a healthy range even with modest public activity.
-Positive reputation signals (well-known orgs or reputable employers) can increase confidence and overall assessment when supported by evidence.
+If reputable companies appear in the bio or repos, mention them briefly as relevant experience, without prestige framing.
+Avoid calling companies prestigious or elite.
+Keep tone human and grounded.
 
 Return a JSON object with exactly this structure:
 {{
