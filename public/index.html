@@ -478,6 +478,26 @@
   }
   .ghost-btn:hover { color: var(--text); border-color: var(--border-bright); }
 
+  .results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .print-only { display: none; }
+
+  @media print {
+    body::before { display: none; }
+    .card, .saved-item { box-shadow: none; }
+    .no-print { display: none !important; }
+    .print-only { display: block; }
+    body { background: #ffffff; color: #111; }
+    .wrap { padding: 0; }
+    .card { border: 1px solid #ddd; }
+  }
+
   footer {
     margin-top: 80px;
     text-align: center;
@@ -497,14 +517,14 @@
     <p class="tagline">// AI-powered analysis of GitHub profiles</p>
   </header>
 
-  <div class="card">
+  <div class="card no-print">
     <div class="card-label">GitHub Profile</div>
     <div class="input-row">
       <input type="text" id="handleInput" placeholder="username or github.com/username" />
     </div>
   </div>
 
-  <div class="card">
+  <div class="card no-print">
     <div class="card-label">Skill Domain</div>
     <div class="domain-grid" id="domainGrid">
       <button class="domain-btn active" data-domain="Backend" onclick="selectDomain(this)"><span class="domain-icon">⚙️</span> Backend</button>
@@ -521,7 +541,7 @@
     <div class="status" id="status"></div>
   </div>
 
-  <div class="card" id="savedCard">
+  <div class="card no-print" id="savedCard">
     <div class="saved-wrap">
       <div class="card-label" style="margin-bottom:0;">Saved Assessments</div>
       <div class="saved-controls">
@@ -535,6 +555,13 @@
 
   <div id="results">
     <div class="card">
+      <div class="results-header">
+        <div class="card-label" style="margin-bottom:0;">Assessment Result</div>
+        <button class="ghost-btn no-print" onclick="downloadPdf()">Download PDF</button>
+      </div>
+      <div class="print-only" style="margin-bottom:12px;font-family:var(--mono);font-size:11px;color:var(--text-dim);">
+        GitHub Screener • Assessment Report
+      </div>
       <div class="profile-row">
         <img class="avatar" id="resAvatar" src="" alt="">
         <div class="profile-info">
@@ -565,7 +592,7 @@
     </div>
   </div>
 
-  <footer>github-screener · powered by AI</footer>
+  <footer class="no-print">github-screener · powered by AI</footer>
 </div>
 
 <script>
@@ -816,6 +843,15 @@ async function runScreening() {
   } finally {
     btn.disabled = false;
   }
+}
+
+function downloadPdf() {
+  const resultsEl = document.getElementById('results');
+  if (!resultsEl.classList.contains('visible')) {
+    setStatus('Run an assessment first to export PDF.', true);
+    return;
+  }
+  window.print();
 }
 
 // Enter key support
